@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>终极平滑持续测速：10GB 大文件 + 瞬时速度</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* CSS 样式与您提供的一致 */
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f2f4f8; 
+            color: #333; 
+            position: relative;
+            overflow: hidden;
+        }
+
+        .container {
+            background-color: #ffffff; 
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08); 
+            padding: 40px 50px;
+            width: 380px;
+            text-align: center;
+            transition: all 0.3s ease;
+            position: relative;
+            z-index: 10;
+        }
+
+        h1 {
+            font-size: 1.8em;
+            font-weight: 500; 
+            color: #2c3e50; 
+            margin-bottom: 35px;
+            letter-spacing: 0.5px;
+        }
+
+        .data-row {
+            margin-bottom: 25px; 
+            padding: 12px 0;
+            border-bottom: 1px solid #e0e6ed; 
+        }
+        .data-row:last-of-type {
+            border-bottom: none;
+        }
+
+        .label {
+            font-size: 0.9em;
+            opacity: 0.75;
+            color: #555;
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 400;
+        }
+
+        .speed-value {
+            font-size: 3.2em; 
+            font-weight: 700; 
+            line-height: 1.1;
+            color: #007bff; 
+            display: inline-block; 
+            vertical-align: baseline;
+        }
+
+        .unit {
+            font-size: 0.6em; 
+            font-weight: 500;
+            vertical-align: super; 
+            margin-left: 5px;
+            opacity: 0.8;
+            color: #666;
+        }
+
+        /* 历史最高峰值使用不同颜色和字体大小强调 */
+        #absoluteMaxSpeedValue {
+            color: #ff9900; 
+            font-size: 2.5em; 
+        }
+
+        .control-btn {
+            padding: 14px 35px;
+            font-size: 1.05em;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin: 8px;
+            min-width: 120px;
+        }
+
+        #btn_speed {
+            background-color: #007bff; 
+            color: #ffffff;
+            box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
+        }
+
+        #btn_speed:hover:not(:disabled) {
+            background-color: #0056b3; 
+            box-shadow: 0 6px 20px rgba(0, 123, 255, 0.4);
+        }
+        
+        #stopBtn {
+            background-color: #e9ecef; 
+            color: #495057;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+        
+        #stopBtn:hover:not(:disabled) {
+            background-color: #dae0e5; 
+            color: #212529;
+        }
+        
+        .control-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        #statusMessage {
+            margin-top: 30px;
+            font-size: 0.95em;
+            min-height: 20px;
+            color: #6c757d; 
+            line-height: 1.4;
+        }
+
+        .background-dots {
+            position: absolute;
+            width: 100vw;
+            height: 100vh;
+            top: 0;
+            left: 0;
+            background: radial-gradient(circle, rgba(0,0,0,0.03) 1px, transparent 1px);
+            background-size: 30px 30px;
+            opacity: 0.6;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* 隐藏原始页面的微小数据显示区域 */
+        #result_down, #result_up, #result_downs, #result_ups, #delay_time, #shake_num, #lost_num {
+            display: none; 
+        }
+
+    </style>
+</head>
+<body>
+    <div class="background-dots"></div> 
+    <div class="container">
+        <h1>终极平滑持续测速</h1>
+
+        <div class="data-row">
+            <span class="label">实时下载速度（平滑瞬时值）</span>
+            <span id="currentSpeed" class="speed-value">0.00</span>
+            <span class="unit">Mbps</span>
+        </div>
+
+        <div class="data-row">
+            <span class="label">本次测试最高峰值</span>
+            <span id="absoluteMaxSpeedValue" class="speed-value">0.00</span>
+            <span class="unit">Mbps</span>
+        </div>
+
+        <div>
+            <input type="button" id="btn_speed" class="control-btn" value="开始持续测速" onclick="startnet(3)">
+            <button id="stopBtn" class="control-btn" onclick="stopnet()" disabled>停止</button>
+        </div>
+
+        <p id="delay_time"></p><p id="shake_num"></p><p id="lost_num"></p>
+        <p id="result_down" class="sults"></p><p id="result_up" class="sults"></p>
+        <p id="result_downs"></p><p id="result_ups"></p>
+
+        <p id="statusMessage">点击“开始持续测速”进行 Cloudflare 10GB 大文件平滑瞬时测试。</p>
+    </div>
+
+    <script>
+        // *** 核心配置：Cloudflare 10GB + 更多线程 ***
+        const BASE_URL = "https://speed.cloudflare.com/__down?bytes=10737418240"; // 10 GB
+        const NUM_CONNECTIONS = 8; // 增加并发线程数到 8，更激进地利用带宽
+        const UPDATE_INTERVAL_MS = 300; // 每 300 毫秒计算一次瞬时速度
+
+        // 状态变量
+        let absoluteMaxSpeed = 0;   
+        let isTesting = false;      
+        let xhrArray = []; 
+        let connectionLoadedBytes = new Array(NUM_CONNECTIONS).fill(0);
+
+        // 用于计算瞬时速度的历史数据点
+        let lastUpdateTime = 0;
+        let lastTotalLoaded = 0;
+        let updateIntervalId = null; 
+
+        function updateStatus(message, color = '#6c757d') {
+            const statusElement = document.getElementById('statusMessage');
+            statusElement.textContent = message;
+            statusElement.style.color = color;
+        }
+        
+        // 核心函数：计算瞬时速度并平滑显示
+        function updateSpeedDisplay() {
+            if (!isTesting) return;
+
+            const currentTime = new Date().getTime();
+            
+            // 首次启动时，跳过瞬时速度计算，只更新历史数据点
+            if (lastUpdateTime === 0) {
+                 lastUpdateTime = currentTime;
+                 lastTotalLoaded = connectionLoadedBytes.reduce((sum, bytes) => sum + bytes, 0); 
+                 return;
+            }
+
+            // 计算自上次更新以来下载了多少数据，以及经过了多少时间
+            const currentTotalLoaded = connectionLoadedBytes.reduce((sum, bytes) => sum + bytes, 0); 
+            const deltaLoaded = currentTotalLoaded - lastTotalLoaded;
+            const deltaTime = currentTime - lastUpdateTime;
+
+            if (deltaTime > 0) {
+                // 计算瞬时速度 (Mbps)
+                // (增量字节 / 增量耗时 ms) * 8 (位/字节) * 1000 (ms/s) / 1048576 (字节/Mb)
+                const currentSpeedMbps = (deltaLoaded / deltaTime) * 8 * 1000 / 1048576; 
+                
+                // 仅在瞬时速度大于 0.05 Mbps 时才更新显示（消除连接建立时的 0 抖动）
+                if (currentSpeedMbps > 0.05) {
+                    document.getElementById('currentSpeed').textContent = currentSpeedMbps.toFixed(2);
+                }
+                
+                // 更新历史最高速度 (即便速度低于 0.05Mbps，只要它高于历史最高，也应更新)
+                if (currentSpeedMbps > absoluteMaxSpeed) {
+                    absoluteMaxSpeed = currentSpeedMbps;
+                    document.getElementById('absoluteMaxSpeedValue').textContent = absoluteMaxSpeed.toFixed(2);
+                }
+
+                // 更新历史数据点
+                lastTotalLoaded = currentTotalLoaded;
+                lastUpdateTime = currentTime;
+            }
+
+            // 更新状态信息
+            const totalMB = (currentTotalLoaded / 1048576).toFixed(2);
+            updateStatus(`正在持续测速 (已下载总计: ${totalMB} MB)`, 'rgb(0, 123, 255)');
+        }
+
+        // 核心测速启动函数
+        function startnet(nodeId) {
+            if (isTesting) return;
+            
+            // 按钮和状态设置
+            document.getElementById('btn_speed').disabled = true;
+            document.getElementById('btn_speed').value = `正在连接...`;
+            document.getElementById('stopBtn').disabled = false;
+            
+            // 重置状态
+            absoluteMaxSpeed = 0;
+            lastTotalLoaded = 0;
+            lastUpdateTime = 0; 
+            connectionLoadedBytes.fill(0);
+            document.getElementById('currentSpeed').textContent = '0.00';
+            document.getElementById('absoluteMaxSpeedValue').textContent = '0.00';
+            updateStatus(`正在建立 ${NUM_CONNECTIONS} 个连接...`, 'rgb(255, 165, 0)'); 
+
+            // 清空旧的连接并准备新连接
+            if (xhrArray.length > 0) {
+                xhrArray.forEach(xhr => xhr.abort());
+            }
+            xhrArray = []; 
+            
+            isTesting = true; // 开启测试状态
+            
+            for (let i = 0; i < NUM_CONNECTIONS; i++) {
+                const xhr = new XMLHttpRequest();
+                xhrArray.push(xhr);
+
+                // 每个连接使用一个随机参数
+                const uniqueUrl = BASE_URL + `&conn=${i}&r=${Date.now()}`;
+                
+                xhr.open('GET', uniqueUrl, true);
+                
+                // 监听进度事件：这是唯一的下载量更新来源
+                xhr.onprogress = function(event) {
+                    if (!isTesting) return; 
+                    connectionLoadedBytes[i] = event.loaded;
+                };
+
+                // 监听加载完成/错误/超时事件
+                xhr.onload = function() {
+                    if (!isTesting) return; 
+                    if (xhr.status === 200) {
+                        // 10GB 文件下载完成，测试自然结束
+                        finishTest(true); 
+                    } else {
+                        updateStatus(`连接 ${i} 失败！错误码: ${xhr.status}。测试已终止。`, 'red');
+                        stopnet(false); 
+                    }
+                };
+                
+                xhr.onerror = xhr.ontimeout = function() {
+                    if (!isTesting) return; 
+                    updateStatus(`连接 ${i} 失败或超时。测试已终止。`, 'red');
+                    stopnet(false);
+                };
+                
+                xhr.send();
+            }
+
+            // 启动平滑速度显示循环
+            updateIntervalId = setInterval(updateSpeedDisplay, UPDATE_INTERVAL_MS);
+        }
+
+        // 结束测试 (自动完成或手动停止)
+        function finishTest(isAuto = false) {
+            // 清除平滑更新的定时器
+            clearInterval(updateIntervalId);
+            
+            // 停止所有连接
+            xhrArray.forEach(xhr => xhr.abort());
+            
+            // 确保测试状态关闭
+            isTesting = false; 
+
+            // 将最终结果显示在实时速度和历史最高上
+            document.getElementById('currentSpeed').textContent = absoluteMaxSpeed.toFixed(2);
+            document.getElementById('absoluteMaxSpeedValue').textContent = absoluteMaxSpeed.toFixed(2);
+            
+            if (isAuto) {
+                updateStatus(`10GB 文件下载完成！最终最高速度: ${absoluteMaxSpeed.toFixed(2)} Mbps`, 'green');
+            } else {
+                updateStatus(`已手动停止持续测速！最终最高速度: ${absoluteMaxSpeed.toFixed(2)} Mbps`, 'red');
+            }
+            
+            // 重置控制按钮状态
+            resetControls();
+        }
+
+        // 手动停止测试
+        function stopnet(isManual = true) {
+             // 如果 isTesting 已经为 false，且不是手动停止（即前面已经因错误或完成而停止了），则不执行任何操作
+            if (!isTesting && !isManual) return;
+            
+            finishTest(false);
+        }
+        
+        function resetControls() {
+            document.getElementById('btn_speed').disabled = false;
+            document.getElementById('btn_speed').value = '开始持续测速';
+            document.getElementById('stopBtn').disabled = true;
+        }
+
+        // 确保页面加载完成后，按钮状态是正确的
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('stopBtn').disabled = true;
+        });
+
+    </script>
+</body>
+</html>
