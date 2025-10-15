@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>终极平滑持续测速：10GB 大文件 + 瞬时速度</title>
+    <title>测个速</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -153,7 +153,7 @@
 <body>
     <div class="background-dots"></div> 
     <div class="container">
-        <h1>终极平滑持续测速</h1>
+        <h1>闲来无事测个速</h1>
 
         <div class="data-row">
             <span class="label">实时下载速度（平滑瞬时值）</span>
@@ -182,8 +182,8 @@
     <script>
         // *** 核心配置：Cloudflare 10GB + 更多线程 ***
         const BASE_URL = "https://speed.cloudflare.com/__down?bytes=10737418240"; // 10 GB
-        const NUM_CONNECTIONS = 8; // 增加并发线程数到 8，更激进地利用带宽
-        const UPDATE_INTERVAL_MS = 300; // 每 300 毫秒计算一次瞬时速度
+        const NUM_CONNECTIONS = 64; // 增加并发线程数到 64，更激进地利用带宽
+        const UPDATE_INTERVAL_MS = 500; // 每 500 毫秒计算一次瞬时速度
 
         // 状态变量
         let absoluteMaxSpeed = 0;   
