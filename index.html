@@ -182,7 +182,7 @@
     <script>
         // *** 核心配置：Cloudflare 10GB + 更多线程 ***
         const BASE_URL = "https://speed.cloudflare.com/__down?bytes=10737418240"; // 10 GB
-        const NUM_CONNECTIONS = 64; // 增加并发线程数到 64，更激进地利用带宽
+        const NUM_CONNECTIONS = 15; // 增加并发线程数到 15，更激进地利用带宽
         const UPDATE_INTERVAL_MS = 500; // 每 500 毫秒计算一次瞬时速度
 
         // 状态变量
