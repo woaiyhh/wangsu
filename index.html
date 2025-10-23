@@ -2,11 +2,12 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>测个速</title>
+    <title>极简网速测试</title>
     
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        /* CSS 样式与您提供的一致 */
+        /* --- 欧式极简风 / 视觉放大 START --- */
+        
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
             margin: 0;
@@ -14,101 +15,106 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            background-color: #f2f4f8; 
-            color: #333; 
+            background-color: #eef1f4; /* 极简的浅灰背景 */
+            color: #2c3e50; /* 深色文字 */
             position: relative;
             overflow: hidden;
         }
 
         .container {
             background-color: #ffffff; 
-            border-radius: 16px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08); 
-            padding: 40px 50px;
-            width: 380px;
+            border-radius: 20px; /* 更圆润的边角 */
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.05); /* 柔和的阴影 */
+            padding: 50px 70px; /* 增加内边距，更宽敞 */
+            width: 550px; /* 增加宽度，营造大气感 */
             text-align: center;
-            transition: all 0.3s ease;
+            transition: all 0.4s ease;
             position: relative;
             z-index: 10;
         }
 
         h1 {
-            font-size: 1.8em;
-            font-weight: 500; 
+            font-size: 2.5em; /* 标题放大 */
+            font-weight: 600; 
             color: #2c3e50; 
-            margin-bottom: 35px;
-            letter-spacing: 0.5px;
+            margin-bottom: 40px;
+            letter-spacing: 0.8px;
         }
 
         .data-row {
-            margin-bottom: 25px; 
-            padding: 12px 0;
-            border-bottom: 1px solid #e0e6ed; 
+            margin-bottom: 35px; /* 增加行间距 */
+            padding: 15px 0;
+            border-bottom: 1px solid #f0f3f7; /* 更细更浅的分隔线 */
         }
         .data-row:last-of-type {
             border-bottom: none;
         }
 
         .label {
-            font-size: 0.9em;
-            opacity: 0.75;
+            font-size: 1.0em; /* 标签字体放大 */
+            opacity: 0.8;
             color: #555;
             display: block;
-            margin-bottom: 8px;
+            margin-bottom: 15px; /* 增加与数值的间距 */
             font-weight: 400;
         }
 
         .speed-value {
-            font-size: 3.2em; 
-            font-weight: 700; 
+            font-size: 5.5em; /* 主速度值大幅放大，视觉冲击力强 */
+            font-weight: 800; /* 更粗的字体 */
             line-height: 1.1;
-            color: #007bff; 
+            color: #007bff; /* 保持一个清晰的蓝色 */
             display: inline-block; 
             vertical-align: baseline;
+            letter-spacing: -2px; /* 稍微收紧字距，更紧凑有力 */
         }
 
         .unit {
-            font-size: 0.6em; 
-            font-weight: 500;
+            font-size: 0.7em; 
+            font-weight: 600;
             vertical-align: super; 
-            margin-left: 5px;
-            opacity: 0.8;
+            margin-left: 8px;
+            opacity: 0.7;
             color: #666;
         }
 
         /* 历史最高峰值使用不同颜色和字体大小强调 */
         #absoluteMaxSpeedValue {
-            color: #ff9900; 
-            font-size: 2.5em; 
+            color: #ff8c00; /* 现代的橙色 */
+            font-size: 4.0em; /* 峰值比实时值小一点，但仍保持大气 */
+            font-weight: 700;
+            letter-spacing: -1px;
+        }
+
+        .control-area {
+            margin-top: 40px;
         }
 
         .control-btn {
-            padding: 14px 35px;
-            font-size: 1.05em;
+            padding: 16px 45px; /* 按钮更宽大 */
+            font-size: 1.1em;
             border: none;
-            border-radius: 8px;
+            border-radius: 10px; /* 更圆润的按钮 */
             cursor: pointer;
             font-weight: 600;
             transition: all 0.3s ease;
-            margin: 8px;
-            min-width: 120px;
+            margin: 10px;
+            min-width: 180px; /* 按钮最小宽度增加 */
+            box-shadow: none; /* 移除阴影，更扁平 */
         }
 
         #btn_speed {
             background-color: #007bff; 
             color: #ffffff;
-            box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
         }
 
         #btn_speed:hover:not(:disabled) {
             background-color: #0056b3; 
-            box-shadow: 0 6px 20px rgba(0, 123, 255, 0.4);
         }
         
         #stopBtn {
             background-color: #e9ecef; 
             color: #495057;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
         }
         
         #stopBtn:hover:not(:disabled) {
@@ -117,46 +123,39 @@
         }
         
         .control-btn:disabled {
-            opacity: 0.6;
+            opacity: 0.5;
             cursor: not-allowed;
-            box-shadow: none;
         }
 
         #statusMessage {
-            margin-top: 30px;
-            font-size: 0.95em;
+            margin-top: 35px;
+            font-size: 1.0em; /* 状态信息放大 */
             min-height: 20px;
             color: #6c757d; 
             line-height: 1.4;
+            font-weight: 500;
         }
-
+        
+        /* 移除背景点，实现极简 */
         .background-dots {
-            position: absolute;
-            width: 100vw;
-            height: 100vh;
-            top: 0;
-            left: 0;
-            background: radial-gradient(circle, rgba(0,0,0,0.03) 1px, transparent 1px);
-            background-size: 30px 30px;
-            opacity: 0.6;
-            z-index: 1;
-            pointer-events: none;
+            display: none; 
         }
 
         /* 隐藏原始页面的微小数据显示区域 */
         #result_down, #result_up, #result_downs, #result_ups, #delay_time, #shake_num, #lost_num {
             display: none; 
         }
+        /* --- 欧式极简风 / 视觉放大 END --- */
 
     </style>
 </head>
 <body>
     <div class="background-dots"></div> 
     <div class="container">
-        <h1>闲来无事测个速</h1>
+        <h1>网络速度测试</h1>
 
         <div class="data-row">
-            <span class="label">实时下载速度（平滑瞬时值）</span>
+            <span class="label">实时瞬时下载速度</span>
             <span id="currentSpeed" class="speed-value">0.00</span>
             <span class="unit">Mbps</span>
         </div>
@@ -167,7 +166,7 @@
             <span class="unit">Mbps</span>
         </div>
 
-        <div>
+        <div class="control-area">
             <input type="button" id="btn_speed" class="control-btn" value="开始持续测速" onclick="startnet(3)">
             <button id="stopBtn" class="control-btn" onclick="stopnet()" disabled>停止</button>
         </div>
@@ -180,6 +179,8 @@
     </div>
 
     <script>
+        // JavaScript 核心逻辑保持不变，确保测速功能稳定
+        
         // *** 核心配置：Cloudflare 10GB + 更多线程 ***
         const BASE_URL = "https://speed.cloudflare.com/__down?bytes=10737418240"; // 10 GB
         const NUM_CONNECTIONS = 15; // 增加并发线程数到 15，更激进地利用带宽
@@ -262,7 +263,7 @@
             connectionLoadedBytes.fill(0);
             document.getElementById('currentSpeed').textContent = '0.00';
             document.getElementById('absoluteMaxSpeedValue').textContent = '0.00';
-            updateStatus(`正在建立 ${NUM_CONNECTIONS} 个连接...`, 'rgb(255, 165, 0)'); 
+            updateStatus(`正在建立 ${NUM_CONNECTIONS} 个连接...`, 'rgb(255, 140, 0)'); // 使用橙色
 
             // 清空旧的连接并准备新连接
             if (xhrArray.length > 0) {
@@ -330,7 +331,7 @@
             if (isAuto) {
                 updateStatus(`10GB 文件下载完成！最终最高速度: ${absoluteMaxSpeed.toFixed(2)} Mbps`, 'green');
             } else {
-                updateStatus(`已手动停止持续测速！最终最高速度: ${absoluteMaxSpeed.toFixed(2)} Mbps`, 'red');
+                updateStatus(`已手动停止持续测速！最终最高速度: ${absoluteMaxSpeed.toFixed(2)} Mbps`, '#ff8c00'); // 手动停止用橙色
             }
             
             // 重置控制按钮状态
